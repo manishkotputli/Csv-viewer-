@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSV Preview Upload</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI',sans-serif;
+}
+
+body{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    overflow:hidden;
+}
+
+.bg-animation{
+    position:fixed;
+    width:100%;
+    height:100%;
+    z-index:-1;
+}
+
+.bg-animation span{
+    position:absolute;
+    display:block;
+    width:20px;
+    height:20px;
+    background:rgba(255,255,255,0.15);
+    animation:animate 20s linear infinite;
+    bottom:-150px;
+    border-radius:50%;
+}
+
+@keyframes animate{
+    0%{
+        transform:translateY(0) rotate(0deg);
+        opacity:1;
+    }
+    100%{
+        transform:translateY(-1000px) rotate(720deg);
+        opacity:0;
+    }
+}
+
+.container{
+    width:90%;
+    max-width:1200px;
+    background:rgba(255,255,255,0.12);
+    backdrop-filter:blur(15px);
+    border:1px solid rgba(255,255,255,0.2);
+    border-radius:25px;
+    padding:30px;
+    box-shadow:0 15px 35px rgba(0,0,0,0.25);
+    animation:fadeIn 1s ease;
+}
+
+@keyframes fadeIn{
+    from{
+        opacity:0;
+        transform:translateY(30px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+h1{
+    text-align:center;
+    color:white;
+    margin-bottom:25px;
+    font-size:2.5rem;
+}
+
+.upload-box{
+    border:3px dashed rgba(255,255,255,0.5);
+    border-radius:20px;
+    padding:40px;
+    text-align:center;
+    transition:.4s;
+    cursor:pointer;
+}
+
+.upload-box:hover{
+    background:rgba(255,255,255,0.1);
+    transform:scale(1.02);
+}
+
+.upload-box p{
+    color:white;
+    font-size:18px;
+    margin-top:10px;
+}
+
+input[type="file"]{
+    display:none;
+}
+
+.icon{
+    font-size:60px;
+    color:white;
+}
+
+.preview-section{
+    margin-top:30px;
+    display:none;
+    animation:slideUp .8s ease;
+}
+
+@keyframes slideUp{
+    from{
+        opacity:0;
+        transform:translateY(40px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+.table-container{
+    max-height:500px;
+    overflow:auto;
+    border-radius:15px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+}
+
+th{
+    background:#667eea;
+    color:white;
+    padding:12px;
+    position:sticky;
+    top:0;
+}
+
+td{
+    padding:10px;
+    border-bottom:1px solid #ddd;
+}
+
+tr:hover{
+    background:#f4f7ff;
+}
+
+.file-info{
+    color:white;
+    margin-bottom:15px;
+    font-size:16px;
+}
+
+::-webkit-scrollbar{
+    width:8px;
+    height:8px;
+}
+
+::-webkit-scrollbar-thumb{
+    background:#667eea;
+    border-radius:10px;
+}
+</style>
+</head>
+<body>
+
+<div class="bg-animation">
+    <span style="left:10%;width:30px;height:30px;"></span>
+    <span style="left:20%;animation-delay:2s;"></span>
+    <span style="left:35%;width:40px;height:40px;animation-delay:4s;"></span>
+    <span style="left:50%;animation-delay:1s;"></span>
+    <span style="left:65%;width:25px;height:25px;animation-delay:3s;"></span>
+    <span style="left:80%;animation-delay:5s;"></span>
+    <span style="left:95%;width:35px;height:35px;"></span>
+</div>
+
+<div class="container">
+
+    <h1>📊 CSV Upload & Preview</h1>
+
+    <label class="upload-box">
+        <div class="icon">📂</div>
+        <p>Click Here To Upload CSV File</p>
+        <input type="file" id="csvFile" accept=".csv">
+    </label>
+
+    <div class="preview-section" id="previewSection">
+        <div class="file-info" id="fileInfo"></div>
+
+        <div class="table-container">
+            <table id="csvTable"></table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+
+const fileInput = document.getElementById('csvFile');
+const table = document.getElementById('csvTable');
+const previewSection = document.getElementById('previewSection');
+const fileInfo = document.getElementById('fileInfo');
+
+fileInput.addEventListener('change', function(e){
+
+    const file = e.target.files[0];
+
+    if(!file) return;
+
+    fileInfo.innerHTML =
+        `✅ File Uploaded: <strong>${file.name}</strong> 
+        (${(file.size/1024).toFixed(2)} KB)`;
+
+    const reader = new FileReader();
+
+    reader.onload = function(event){
+
+        const csv = event.target.result;
+
+        const rows = csv.trim().split('\n');
+
+        table.innerHTML = '';
+
+        rows.forEach((row,index)=>{
+
+            const cols = row.split(',');
+
+            const tr = document.createElement('tr');
+
+            cols.forEach(col=>{
+
+                const cell = document.createElement(index===0 ? 'th' : 'td');
+
+                cell.textContent = col.trim();
+
+                tr.appendChild(cell);
+
+            });
+
+            table.appendChild(tr);
+
+        });
+
+        previewSection.style.display='block';
+
+        previewSection.scrollIntoView({
+            behavior:'smooth'
+        });
+
+    };
+
+    reader.readAsText(file);
+
+});
+
+</script>
+
+</body>
+</html>
